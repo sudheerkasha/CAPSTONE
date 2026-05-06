@@ -69,12 +69,24 @@ pipeline {
             }
         }
 
-        stage('Run Smoke Tests') {
-            when { expression { params.MARKERS == 'smoke' || params.MARKERS == 'all' } }
-            steps {
-                script {
-                    def cmd = "pytest tests/ -m smoke -v --alluredir=reports/allure-results --reruns=2 --reruns-delay=2"
-                    runTests(cmd)
+        stage('Run Tests') {
+    steps {
+        script {
+
+            def cmd = """
+            pytest tests/ \
+            -v \
+            --junitxml=reports/results.xml \
+            --alluredir=reports/allure-results \
+            -n ${params.PARALLEL_WORKERS} \
+            --reruns=2 \
+            --reruns-delay=2
+            """
+
+            runTests(cmd)
+        }
+    }
+}
                 }
             }
         }
