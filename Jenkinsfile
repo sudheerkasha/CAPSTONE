@@ -131,6 +131,7 @@ pipeline {
                     def cmd = """
                     pytest tests/ ^
                     -v ^
+                    -s ^
                     --junitxml=reports/results.xml ^
                     --alluredir=reports/allure-results ^
                     --reruns=2 ^
