@@ -331,68 +331,89 @@ class TestE2E:
     @allure.severity(allure.severity_level.CRITICAL)
     @pytest.mark.e2e
     @pytest.mark.smoke
-    def test_api_delete_ui_verify(self, e2e_setup):
+    @allure.story("API to UI Sync")
+@allure.severity(allure.severity_level.CRITICAL)
+@pytest.mark.e2e
+@pytest.mark.smoke
+def test_api_delete_ui_verify(self, e2e_setup):
 
-        ctx = e2e_setup
+    ctx = e2e_setup
 
-        notes_page = ctx["notes_page"]
-        api = ctx["api"]
-        driver = ctx["driver"]
+    notes_page = ctx["notes_page"]
+    api = ctx["api"]
+    driver = ctx["driver"]
 
-        title = generate_note_title()
-        description = generate_note_description()
-
-        # Create via API
-        with allure.step("Create note via API"):
-
-            create_resp = api.create_note(
-                title,
-                description,
-                "Home"
-            )
-
-            assert create_resp.status_code == 200
-
-            note_id = create_resp.json()["data"]["id"]
-
-        # Refresh UI
-        with allure.step("Refresh and verify UI"):
-
-            notes_page.refresh_page()
-
-            self.wait_for_page(driver)
-
-            WebDriverWait(driver, 15).until(
-                EC.presence_of_element_located((By.TAG_NAME, "body"))
-            )
-
-            assert self.safe_note_check(notes_page, title), \
-                f"Note '{title}' not visible after API create"
-
-        # Delete via API
-        with allure.step("Delete note via API"):
-
-            del_resp = api.delete_note(note_id)
-
-            assert del_resp.status_code == 200
-
-        # Refresh and verify deletion
-        with allure.step("Verify deletion in UI"):
-
-            notes_page.refresh_page()
-
-            self.wait_for_page(driver)
-
-            WebDriverWait(driver, 15).until(
-                EC.presence_of_element_located((By.TAG_NAME, "body"))
-            )
-
-            assert not self.safe_note_check(notes_page, title), \
-                f"Deleted note '{title}' still visible"
-
-        logger.info("TC-28 PASSED")
+    title = generate_note_title()
+    description = generate_note_description()
 
     # ============================================
+    # STEP 1: CREATE NOTE VIA API
+    # ============================================
+
+    with allure.step("Create note via API"):
+
+        create_resp = api.create_note(
+            title,
+            description,
+            "Home"
+        )
+
+        assert create_resp.status_code == 200
+
+        note_id = create_resp.json()["data"]["id"]
+
+    # ============================================
+    # STEP 2: LOAD PAGE SAFELY
+    # ============================================
+
+    with allure.step("Verify note appears in UI"):
+
+        driver.get(driver.current_url)
+
+        WebDriverWait(driver, 20).until(
+            lambda d: d.execute_script(
+                "return document.readyState"
+            ) == "complete"
+        )
+
+        assert notes_page.is_note_displayed(title), \
+            f"Note '{title}' should appear in UI"
+
+    # ============================================
+    # STEP 3: DELETE NOTE VIA API
+    # ============================================
+
+    with allure.step("Delete note via API"):
+
+        del_resp = api.delete_note(note_id)
+
+        assert del_resp.status_code == 200
+
+    # VERY IMPORTANT
+    # Give backend time to sync
+
+    WebDriverWait(driver, 10).until(
+        lambda d: True
+    )
+
+    # ============================================
+    # STEP 4: RELOAD PAGE SAFELY
+    # ============================================
+
+    with allure.step("Verify note removed from UI"):
+
+        driver.get(driver.current_url)
+
+        WebDriverWait(driver, 20).until(
+            lambda d: d.execute_script(
+                "return document.readyState"
+            ) == "complete"
+        )
+
+        assert not notes_page.is_note_displayed(title), \
+            f"Deleted note '{title}' still visible"
+
+    logger.info("TC-28 PASSED")    # ============================================
     # TC-29
     # ============================================
 
