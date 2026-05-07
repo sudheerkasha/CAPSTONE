@@ -81,7 +81,7 @@ class TestE2E:
             assert api_note["category"] == category, \
                 f"Category mismatch: expected '{category}'"
 
-        logger.info("✅ TC-27: UI→API consistency PASSED")
+        logger.info(" TC-27: UI→API consistency PASSED")
 
     # ============================================
     # SCENARIO 2: API → UI (Delete via API, Verify in UI)
@@ -135,7 +135,7 @@ class TestE2E:
             assert not notes_page.is_note_displayed(title), \
                 f"Deleted note '{title}' should NOT appear in UI"
 
-        logger.info("✅ TC-28: API→UI sync PASSED")
+        logger.info(" TC-28: API→UI sync PASSED")
 
     # ============================================
     # SCENARIO 3: Full CRUD Cycle
@@ -204,7 +204,7 @@ class TestE2E:
             assert not notes_page.is_note_displayed(updated_title), \
                 "Deleted note should not appear in UI"
 
-        logger.info("✅ TC-29: Full CRUD hybrid PASSED")
+        logger.info(" TC-29: Full CRUD hybrid PASSED")
 
     # ============================================
     # PERFORMANCE: UI Load Timing
@@ -224,4 +224,4 @@ class TestE2E:
 
         assert load_time < 5.0, \
             f"Page load time {load_time:.2f}s exceeds 5s threshold"
-        logger.info(f"✅ TC-30: Page load {load_time:.2f}s PASSED")
+        logger.info(f" TC-30: Page load {load_time:.2f}s PASSED")
